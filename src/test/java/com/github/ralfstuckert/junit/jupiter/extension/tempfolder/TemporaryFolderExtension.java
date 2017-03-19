@@ -11,10 +11,38 @@ import java.lang.reflect.Parameter;
 /**
  * Created by Ralf on 08.03.2017.
  */
-public class TemporaryFolderExtension implements ParameterResolver, AfterTestExecutionCallback, TestInstancePostProcessor {
+public class TemporaryFolderExtension implements ParameterResolver, BeforeTestExecutionCallback, AfterTestExecutionCallback, TestInstancePostProcessor {
+
+    @Override
+    public void beforeTestExecution(TestExtensionContext extensionContext) throws Exception {
+        // clean up test instance
+        prepareTemporaryFolder(extensionContext);
+
+        if (extensionContext.getParent().isPresent()) {
+            // clean up injected member
+            prepareTemporaryFolder(extensionContext.getParent().get());
+        }
+    }
 
     @Override
     public void afterTestExecution(TestExtensionContext extensionContext) throws Exception {
+        // clean up test instance
+        cleanUpTemporaryFolder(extensionContext);
+
+        if (extensionContext.getParent().isPresent()) {
+            // clean up injected member
+            cleanUpTemporaryFolder(extensionContext.getParent().get());
+        }
+    }
+
+    protected void prepareTemporaryFolder(ExtensionContext extensionContext) throws IOException {
+        TemporaryFolder temporaryFolder = getTemporaryFolder(extensionContext);
+        if (temporaryFolder != null) {
+            temporaryFolder.before();
+        }
+    }
+
+    protected void cleanUpTemporaryFolder(ExtensionContext extensionContext) {
         TemporaryFolder temporaryFolder = getTemporaryFolder(extensionContext);
         if (temporaryFolder != null) {
             temporaryFolder.after();
@@ -72,21 +100,10 @@ public class TemporaryFolderExtension implements ParameterResolver, AfterTestExe
 
     protected TemporaryFolder createTemporaryFolder(ExtensionContext extensionContext) {
         TemporaryFolder temporaryFolder = getStore(extensionContext).getOrComputeIfAbsent(extensionContext.getTestClass().get(), this::createTemporaryFolder, TemporaryFolder.class);
-        try {
-            temporaryFolder.create();
-        } catch (IOException e) {
-            throw new ExtensionConfigurationException(e.toString());
-        }
         return temporaryFolder;
     }
 
-    protected ExtensionContext.Store getContainerStore(ExtensionContext context) {
-        if (context instanceof TestExtensionContext) {
-        }
-        return null;
-    }
-
-        protected ExtensionContext.Store getStore(ExtensionContext context) {
+    protected ExtensionContext.Store getStore(ExtensionContext context) {
         return context.getStore(ExtensionContext.Namespace.create(getClass(), context));
     }
 

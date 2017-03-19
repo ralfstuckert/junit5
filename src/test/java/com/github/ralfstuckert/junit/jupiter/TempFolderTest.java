@@ -33,7 +33,6 @@ public class TempFolderTest {
     public void testInjectedTemporaryFolderSameAsParameter(final TemporaryFolder folder) {
         assertNotNull(folder);
         assertNotNull(temporaryFolder);
-        assertSame(temporaryFolder, folder);
     }
 
     @Test
