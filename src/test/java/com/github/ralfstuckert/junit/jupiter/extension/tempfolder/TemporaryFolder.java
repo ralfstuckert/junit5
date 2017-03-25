@@ -9,10 +9,6 @@ public class TemporaryFolder {
 
     private File root;
 
-    public void before() throws IOException {
-        root = null;
-    }
-
     public void after() {
         delete();
     }
@@ -27,6 +23,7 @@ public class TemporaryFolder {
     protected void delete() {
         if (root != null) {
             recursiveDelete(root);
+            root = null;
         }
     }
 
@@ -60,6 +57,7 @@ public class TemporaryFolder {
                 recursiveDelete(each);
             }
         }
+
         if (!file.delete()) {
             file.deleteOnExit();
         }

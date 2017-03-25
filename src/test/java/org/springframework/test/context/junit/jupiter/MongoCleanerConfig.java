@@ -9,10 +9,6 @@ import org.springframework.stereotype.Component;
 @Configuration
 public class MongoCleanerConfig {
 
-    public MongoCleanerConfig() {
-        super();
-    }
-
     @Bean
     public MongoCleaner mongoCleaner() {
         return new MongoCleaner();

@@ -7,9 +7,6 @@ import org.springframework.core.annotation.AnnotationUtils;
 import java.lang.reflect.AnnotatedElement;
 import java.util.*;
 
-/**
- * Created by Ralf on 10.03.2017.
- */
 public class MongoCleanupExtension implements BeforeEachCallback, AfterEachCallback {
 
     @Override

@@ -5,24 +5,13 @@ import org.junit.jupiter.api.extension.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.Member;
 import java.lang.reflect.Parameter;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Created by Ralf on 08.03.2017.
- */
-public class TemporaryFolderExtension implements ParameterResolver, BeforeTestExecutionCallback, AfterTestExecutionCallback, TestInstancePostProcessor {
-
-    @Override
-    public void beforeTestExecution(TestExtensionContext extensionContext) throws Exception {
-        // clean up test instance
-        prepareTemporaryFolder(extensionContext);
-
-        if (extensionContext.getParent().isPresent()) {
-            // clean up injected member
-            prepareTemporaryFolder(extensionContext.getParent().get());
-        }
-    }
+public class TemporaryFolderExtension implements ParameterResolver, AfterTestExecutionCallback, TestInstancePostProcessor {
 
     @Override
     public void afterTestExecution(TestExtensionContext extensionContext) throws Exception {
@@ -35,16 +24,8 @@ public class TemporaryFolderExtension implements ParameterResolver, BeforeTestEx
         }
     }
 
-    protected void prepareTemporaryFolder(ExtensionContext extensionContext) throws IOException {
-        TemporaryFolder temporaryFolder = getTemporaryFolder(extensionContext);
-        if (temporaryFolder != null) {
-            temporaryFolder.before();
-        }
-    }
-
     protected void cleanUpTemporaryFolder(ExtensionContext extensionContext) {
-        TemporaryFolder temporaryFolder = getTemporaryFolder(extensionContext);
-        if (temporaryFolder != null) {
+        for (TemporaryFolder temporaryFolder : getTemporaryFolders(extensionContext)) {
             temporaryFolder.after();
         }
     }
@@ -52,15 +33,16 @@ public class TemporaryFolderExtension implements ParameterResolver, BeforeTestEx
     @Override
     public boolean supports(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         Parameter parameter = parameterContext.getParameter();
-        return parameter.getType().isAssignableFrom(TemporaryFolder.class) ||
+        return (extensionContext instanceof TestExtensionContext) && (parameter.getType().isAssignableFrom(TemporaryFolder.class) ||
                 (parameter.getType().isAssignableFrom(File.class) && (parameter.isAnnotationPresent(TempFolder.class)
-                        || parameter.isAnnotationPresent(TempFile.class)));
+                        || parameter.isAnnotationPresent(TempFile.class))));
     }
 
     @Override
     public Object resolve(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        TestExtensionContext testExtensionContext = (TestExtensionContext) extensionContext;
         try {
-            TemporaryFolder temporaryFolder = createTemporaryFolder(extensionContext);
+            TemporaryFolder temporaryFolder = createTemporaryFolder(testExtensionContext, testExtensionContext.getTestMethod().get());
 
             Parameter parameter = parameterContext.getParameter();
             if (parameter.getType().isAssignableFrom(TemporaryFolder.class)) {
@@ -87,29 +69,30 @@ public class TemporaryFolderExtension implements ParameterResolver, BeforeTestEx
     public void postProcessTestInstance(Object testInstance, ExtensionContext context) throws Exception {
         for (Field field : testInstance.getClass().getDeclaredFields()) {
             if (field.getType().isAssignableFrom(TemporaryFolder.class)) {
-                TemporaryFolder temporaryFolder = createTemporaryFolder(context);
+                TemporaryFolder temporaryFolder = createTemporaryFolder(context, field);
                 field.setAccessible(true);
                 field.set(testInstance, temporaryFolder);
             }
         }
     }
 
-    protected TemporaryFolder getTemporaryFolder(ExtensionContext extensionContext) {
-        return getStore(extensionContext).get(extensionContext.getTestClass().get(), TemporaryFolder.class);
+    protected Iterable<TemporaryFolder> getTemporaryFolders(ExtensionContext extensionContext) {
+        Map<Object, TemporaryFolder> map = getStore(extensionContext).get(extensionContext.getTestClass().get(), Map.class);
+        if (map == null) {
+            return Collections.emptySet();
+        }
+        return map.values();
     }
 
-    protected TemporaryFolder createTemporaryFolder(ExtensionContext extensionContext) {
-        TemporaryFolder temporaryFolder = getStore(extensionContext).getOrComputeIfAbsent(extensionContext.getTestClass().get(), this::createTemporaryFolder, TemporaryFolder.class);
-        return temporaryFolder;
+    protected TemporaryFolder createTemporaryFolder(ExtensionContext extensionContext, Member key) {
+        Map<Member, TemporaryFolder> map =
+                getStore(extensionContext).getOrComputeIfAbsent(extensionContext.getTestClass().get(),
+                        (c) -> new ConcurrentHashMap<>(), Map.class);
+        return map.computeIfAbsent(key, (k) -> new TemporaryFolder());
     }
 
     protected ExtensionContext.Store getStore(ExtensionContext context) {
         return context.getStore(ExtensionContext.Namespace.create(getClass(), context));
-    }
-
-    private TemporaryFolder createTemporaryFolder(Class<?> t) {
-        TemporaryFolder temporaryFolder = new TemporaryFolder();
-        return temporaryFolder;
     }
 
 }
