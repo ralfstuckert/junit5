@@ -1,20 +1,13 @@
-package org.springframework.test.context.junit.jupiter;
+package com.github.ralfstuckert.junit.jupiter.extension.mongo;
 
 import org.junit.jupiter.api.extension.*;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.*;
 
-/**
- * This extension uses the {@link SpringExtension#getApplicationContext(ExtensionContext)}}
- * method which is currently package private, that's why this class is located in the same
- * package :-\
- * <br/>
- * This will be fixed in the next spring release 5.0 RC1, see issue
- * <a href="https://jira.spring.io/browse/SPR-15340>SPR-15340</a>.
- */
 public class MongoCleanupExtension implements BeforeEachCallback, AfterEachCallback {
 
     @Override

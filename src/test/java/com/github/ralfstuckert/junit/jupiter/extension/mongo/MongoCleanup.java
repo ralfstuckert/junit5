@@ -1,7 +1,6 @@
-package org.springframework.test.context.junit.jupiter;
+package com.github.ralfstuckert.junit.jupiter.extension.mongo;
 
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;

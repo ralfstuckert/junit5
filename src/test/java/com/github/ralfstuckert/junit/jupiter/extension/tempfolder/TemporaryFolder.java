@@ -1,7 +1,5 @@
 package com.github.ralfstuckert.junit.jupiter.extension.tempfolder;
 
-import org.junit.Rule;
-
 import java.io.File;
 import java.io.IOException;
 

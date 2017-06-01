@@ -1,4 +1,4 @@
-package org.springframework.test.context.junit.jupiter;
+package com.github.ralfstuckert.junit.jupiter.extension.mongo;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;

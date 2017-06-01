@@ -23,7 +23,7 @@ public class PersistenceConfig extends AbstractMongoConfiguration {
 	private String dbName;
 
 	@Override
-	public Mongo mongo() throws Exception {
+	public MongoClient mongoClient() {
 		return new MongoClient(new MongoClientURI(this.dbUri));
 	}
 
