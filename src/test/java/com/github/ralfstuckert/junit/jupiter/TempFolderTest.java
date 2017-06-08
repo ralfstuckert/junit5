@@ -4,7 +4,6 @@ import com.github.ralfstuckert.junit.jupiter.extension.tempfolder.TempFile;
 import com.github.ralfstuckert.junit.jupiter.extension.tempfolder.TempFolder;
 import com.github.ralfstuckert.junit.jupiter.extension.tempfolder.TemporaryFolder;
 import com.github.ralfstuckert.junit.jupiter.extension.tempfolder.TemporaryFolderExtension;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
